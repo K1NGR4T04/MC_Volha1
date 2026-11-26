@@ -147,4 +147,25 @@ docker compose exec airflow-scheduler airflow dags trigger medallion_daily_pipel
   docker compose down -v
   docker compose up -d --build
   ```
+- **Dataset download fails with `NoSuchKey`:**
+  The downloader finds `MANIFEST.sha256` under `course-2026/archives/` but then looks for the archive one level up (`course-2026/landing_dev_days_01_200.zip`). Point the prefix at the `archives` folder in `.env`:
+  ```dotenv
+  R2_PREFIX=course-2026/archives
+  ```
+  Then re-run `./scripts/download_data.sh`.
+- **`spark-submit: executable file not found in $PATH` with `docker compose exec`:**
+  `spark-submit` is not on the container's `PATH` for `exec` sessions. Call it by its full path:
+  ```bash
+  docker compose exec spark-master /opt/spark/bin/spark-submit \
+    --master spark://spark-master:7077 \
+    /opt/workspace/spark_jobs/bronze/ingest_clients.py \
+    --batch-date 2026-01-01
+  ```
+- **`claude plugin marketplace add smoothgrinder/spark-lakehouse-marketplace` fails with `An unknown error occurred (Unexpected)`:**
+  Use the full Git URL instead of the `owner/repo` shorthand:
+  ```bash
+  claude plugin marketplace add https://github.com/smoothgrinder/spark-lakehouse-marketplace.git
+  claude plugin install lakehouse-dev-ops@spark-lakehouse-marketplace
+  ```
+  Re-running `claude plugin install` for a plugin that is already installed shows the same generic error and can be ignored. Check with `claude plugin list`.
 - <!-- TODO: Add any project-specific issues and fixes you encountered (e.g., weekend `fx_rates` sensor handling, Spark memory tuning, DuckDB Delta lock/refresh notes). -->
